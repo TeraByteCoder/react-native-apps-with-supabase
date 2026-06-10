@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { WorkoutCard } from '@workout/shared-components';
+import { WorkoutCard, WorkoutTrackingDashboard } from '@workout/shared-components';
+import { loadWorkoutTrackingData, mockWorkoutTrackingData } from '@workout/shared-utils';
 
+type WorkoutTrackingResultState = Awaited<ReturnType<typeof loadWorkoutTrackingData>>;
 
 const upcomingWorkouts = [
   {
@@ -28,6 +30,13 @@ function getCurrentPathname(): string {
 
 export default function App() {
   const [pathname, setPathnameState] = useState(getCurrentPathname());
+  const [trackingResult, setTrackingResult] = useState<WorkoutTrackingResultState>({
+    source: 'mock',
+    data: mockWorkoutTrackingData,
+    workouts: [],
+    error: 'Workout tracking data has not loaded yet.'
+  });
+  const [trackingStatus, setTrackingStatus] = useState<'loading' | 'loaded'>('loading');
 
   const navigateTo = (pathname: string) => {
     setPathnameState(pathname);
@@ -73,6 +82,34 @@ export default function App() {
 
     return () => {
       maybeWindow.window?.removeEventListener?.('popstate', syncPath);
+    };
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadDashboardData() {
+      setTrackingStatus('loading');
+
+      const result = await loadWorkoutTrackingData({
+        env: {
+          EXPO_PUBLIC_SUPABASE_URL: process.env.EXPO_PUBLIC_SUPABASE_URL,
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY
+        }
+      });
+
+      if (!isMounted) {
+        return;
+      }
+
+      setTrackingResult(result);
+      setTrackingStatus('loaded');
+    }
+
+    void loadDashboardData();
+
+    return () => {
+      isMounted = false;
     };
   }, []);
 
@@ -140,6 +177,27 @@ export default function App() {
           <>
             <Text style={styles.heading}>Workout App</Text>
             <Text style={styles.subheading}>Mobile-Frontend fuer Trainingsplaene, Sessions und Fortschritt.</Text>
+            <View style={styles.trackingStatusCard}>
+              <View style={styles.statusRow}>
+                <Text style={styles.label}>Tracking data source</Text>
+                <Text
+                  style={[
+                    styles.statusPill,
+                    trackingResult.source === 'supabase' ? styles.statusHealthy : styles.statusLoading
+                  ]}
+                >
+                  {trackingStatus === 'loading' ? 'LOADING' : trackingResult.source.toUpperCase()}
+                </Text>
+              </View>
+              <Text style={styles.healthMessage}>
+                {trackingResult.source === 'supabase'
+                  ? 'Loaded workout tracking data from Supabase REST.'
+                  : 'Using mock workout tracking data until Supabase URL and anon key are configured.'}
+              </Text>
+              {trackingResult.error ? <Text style={styles.errorText}>{trackingResult.error}</Text> : null}
+            </View>
+            <WorkoutTrackingDashboard {...trackingResult.data} />
+            <Text style={styles.sectionHeading}>Upcoming workouts</Text>
             <View style={styles.list}>
               {upcomingWorkouts.map((workout) => (
                 <WorkoutCard
@@ -226,6 +284,28 @@ const styles = StyleSheet.create({
   },
   list: {
     gap: 16
+  },
+  sectionHeading: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#1f2937'
+  },
+  trackingStatusCard: {
+    maxWidth: 1120,
+    gap: 10,
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#e5e7eb'
+  },
+  errorText: {
+    fontSize: 14,
+    color: '#991b1b',
+    backgroundColor: '#fee2e2',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10
   },
   healthCard: {
     maxWidth: 720,

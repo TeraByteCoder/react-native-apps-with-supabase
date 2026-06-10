@@ -11,6 +11,7 @@
   "dependencies": {
     "@expo/metro-runtime": "^5.0.4",
     "@workout/shared-components": "file:../../packages/shared-components",
+    "@workout/shared-utils": "file:../../packages/shared-utils",
     "expo": "~54.0.10",
     "react": "19.1.0",
     "react-native": "0.81.5"

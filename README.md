@@ -311,14 +311,15 @@ Fuer jeden dieser Bereiche sollten SQL Functions gezielt pro Use Case entworfen 
 
 ## Agent-Skills fuer die Umsetzung
 
-Die Projektarbeit ist in vier Hermes-aehnliche Skills aufgeteilt:
+Die Projektarbeit ist in drei Hermes-aehnliche Skills aufgeteilt:
 
-- `planner`: erstellt User Stories mit Akzeptanzkriterien.
-- `manager`: koordiniert Aufgaben, Review und Abgabecheck.
-- `builder`: setzt geplante Stories in React Native, Storybook, Packages oder Supabase um.
-- `worker`: erledigt fokussierte Hilfsaufgaben wie Validierung, Parsing, Checks und ZIP-Erstellung.
+- `planner`: plant die Arbeit und erstellt User Storys mit Akzeptanzkriterien.
+- `manager`: nimmt die Planner-Storys und managed Worker-Subagents ueber `delegate_task`.
+- `worker`: beschreibt die fokussierten Subagents, die einzelne Storys, Checks, Docs oder Packaging-Aufgaben ausfuehren.
 
-Die genaue Verwendung ist in `docs/skills-usage.md` beschrieben.
+Es gibt keinen separaten `builder` Skill mehr. Umsetzung passiert durch Worker-Subagents, die vom Manager gestartet und geprueft werden.
+
+Die genaue Verwendung und Beispiel-`delegate_task`-Aufrufe sind in `docs/skills-usage.md` beschrieben.
 
 ## Moegliche naechste Schritte
 

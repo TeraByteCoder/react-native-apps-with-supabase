@@ -1,53 +1,50 @@
 ---
 name: planner
-description: "Use when a product idea or prototype must be translated into user stories, acceptance criteria, priorities, and a concrete backlog for the workout platform."
-version: 1.0.0
+description: "Use when an assignment, prototype, or feature idea must be converted into clear user stories, acceptance criteria, and a task split for manager-managed worker subagents."
+version: 1.1.0
 author: Lukas
 license: MIT
 platforms: [linux, macos, windows]
 metadata:
   hermes:
-    tags: [planning, user-stories, backlog, workout-platform, supabase]
-    related_skills: [manager, builder, worker]
+    tags: [planning, user-stories, storybook, backlog, subagents]
+    related_skills: [manager, worker]
 ---
 
 # Planner Skill
 
 ## Overview
 
-The planner skill turns the assignment, README, prototype screens, and user wishes into a clear implementation plan. Its main output is a backlog made of user stories, acceptance criteria, dependencies, and priorities.
+The planner skill is the first role in the workflow. It reads the assignment, README, prototypes, and user request, then creates the user stories that will later be executed by worker subagents.
 
-Use this skill before coding. The planner does not implement features directly. It defines what should be built, why it matters, how success is checked, and which downstream skill should handle each task.
+Planner does not manage subagents and does not implement code directly. Its job is to make the work small, clear, testable, and ready for the manager.
+
+In this project, “Storys” means user stories, not Storybook stories. If the task is UI-related, planner can still require Storybook coverage in the acceptance criteria.
 
 ## When to Use
 
-- A new feature or screen must be clarified before implementation.
-- The assignment needs to be converted into user stories.
-- The team needs a prioritized backlog for workout-app, admin-app, shared components, or Supabase.
-- Requirements are mixed across README, prototypes, and chat notes.
-- Builder, worker, or manager need a precise task brief.
+- A new assignment or feature must be split into work packages.
+- User wishes are vague and need to become concrete user stories.
+- The manager needs a backlog it can hand to worker subagents.
+- A React Native, Supabase, or Storybook-related task needs acceptance criteria.
+- Before any implementation starts.
 
-Do not use this skill for direct coding, refactoring, or final quality control. Use builder for implementation, worker for focused execution tasks, and manager for coordination and review.
+Do not use planner for subagent orchestration. Use manager for that.
+Do not use planner for implementation. Worker subagents do that after manager assigns stories.
 
 ## Inputs
 
-Collect these inputs before writing stories:
+Planner should inspect or receive:
 
-- Assignment or README sections that define the feature.
-- Prototype files under `docs/ui/prototypes/` when UI is involved.
-- Existing app/package paths:
-  - `apps/workout-app`
-  - `apps/admin-app`
-  - `packages/shared-components`
-  - `packages/shared-types`
-  - `packages/shared-utils`
-  - `supabase/functions`
-  - `supabase/migrations`
-- Known constraints, for example React Native, Expo, Storybook, Supabase Edge Functions, SQL Functions, and CDD.
+- the assignment text or PDF summary,
+- `README.md`,
+- prototypes under `docs/ui/prototypes/`,
+- existing project structure,
+- current constraints such as React Native, Expo, Storybook, Supabase Edge Functions, SQL Functions, and CDD.
 
-## User Story Format
+## Output: User Story Backlog
 
-Write every story in this shape:
+Write each story in this exact shape:
 
 ```text
 US-<number>: <short title>
@@ -56,58 +53,69 @@ I want <capability>,
 so that <benefit>.
 
 Priority: Must | Should | Could
-Owner skill: planner | manager | builder | worker
-Affected areas: <paths>
+Worker type: ui-worker | backend-worker | docs-worker | validation-worker | packaging-worker
+Affected paths:
+- <path>
 Dependencies: <story ids or none>
 Acceptance criteria:
 - Given <context>, when <action>, then <result>.
 - Given <context>, when <action>, then <result>.
 Implementation notes:
-- <technical note>
+- <short technical hints, no full implementation>
 Verification:
-- <command, storybook check, typecheck, or manual check>
+- <command or manual check>
 ```
 
-## Story Roles
+## Worker Types
 
-Use concrete roles from the workout platform:
+Use these worker types so the manager can dispatch the right subagent:
 
-- Visitor: sees landing, login, and registration entry points.
-- Athlete: uses workouts, plans, progress, and profile features.
-- Coach/Admin: manages exercises, plans, users, and analytics in the admin app.
-- Developer: works with shared components, Storybook, and Supabase contracts.
+- `ui-worker`: React Native screens, shared components, design system, Storybook stories.
+- `backend-worker`: Supabase Edge Functions, migrations, SQL Functions, RLS.
+- `docs-worker`: README, usage docs, assignment documentation.
+- `validation-worker`: type checks, skill validation, file checks, review checks.
+- `packaging-worker`: abgabe ZIP, generated artifacts, submission folders.
 
-## Prioritization Rules
+## Planning Rules
 
-1. Must: required by the assignment, needed for the app to run, or blocks other stories.
-2. Should: important for a clean demo, but not a hard blocker.
-3. Could: polish, later extension, or optional improvement.
+1. Every story must be small enough for one worker subagent.
+2. Every story must have testable acceptance criteria.
+3. UI stories must mention Storybook when reusable components are touched.
+4. Backend stories must state whether logic belongs in Edge Functions or SQL Functions.
+5. Documentation and packaging must be separate stories if they are required.
+6. Avoid vague tasks like “make app better”. Convert them into concrete user outcomes.
 
-Keep the first backlog small enough to implement. Prefer 5 to 12 high-quality stories over a huge vague list.
+## Handoff to Manager
 
-## Handoff to Other Skills
-
-After planning, create a short handoff table:
+End every planner result with a manager handoff:
 
 ```text
-Story | Next skill | Reason
-US-01 | builder | Needs React Native component implementation
-US-02 | worker | Needs one isolated Supabase migration
-US-03 | manager | Needs cross-app coordination and review
+Manager handoff:
+- Total stories: <n>
+- Suggested parallel groups:
+  - Group A: US-01, US-02
+  - Group B: US-03
+- Sequential blockers:
+  - US-04 waits for US-02
+- Required final checks:
+  - npm run check-types
+  - skill validation script
+  - ZIP content check
 ```
 
 ## Common Pitfalls
 
-1. Writing tasks instead of user stories. A story must state role, capability, and benefit.
-2. Missing acceptance criteria. Without them, builder and worker cannot verify completion.
-3. Planning too broadly. Keep scope tied to the assignment and existing repository.
-4. Mixing implementation into planning. Planner may suggest paths and commands, but should not write code.
-5. Forgetting Supabase boundaries. Edge Functions orchestrate use cases; SQL Functions hold domain logic.
+1. Writing implementation steps instead of user stories.
+2. Forgetting acceptance criteria, which makes worker verification weak.
+3. Making stories too big for one subagent.
+4. Mixing manager responsibilities into planner output.
+5. Forgetting Storybook requirements for reusable UI components.
+6. Ignoring dependencies between stories.
 
 ## Verification Checklist
 
-- [ ] Every story has role, goal, benefit, priority, owner skill, and affected paths.
+- [ ] Every story has role, goal, benefit, priority, worker type, paths, and dependencies.
 - [ ] Acceptance criteria are testable.
-- [ ] Dependencies are explicit.
-- [ ] Handoff to manager, builder, or worker is clear.
-- [ ] Scope matches the assignment and README.
+- [ ] Storybook is required where reusable UI is touched.
+- [ ] Backend boundary between Edge Functions and SQL Functions is clear when relevant.
+- [ ] Manager handoff includes story count, parallel groups, blockers, and final checks.

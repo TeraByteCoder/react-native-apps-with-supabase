@@ -1,92 +1,143 @@
 ---
 name: manager
-description: "Use when multiple planner, builder, and worker tasks must be coordinated, reviewed, packaged, and checked against the assignment deliverables."
-version: 1.0.0
+description: "Use when planner-created user stories must be managed by dispatching worker subagents with delegate_task, collecting their results, reviewing them, and preparing the final handoff."
+version: 1.1.0
 author: Lukas
 license: MIT
 platforms: [linux, macos, windows]
 metadata:
   hermes:
-    tags: [coordination, review, deliverables, workflow, quality-gate]
-    related_skills: [planner, builder, worker]
+    tags: [manager, subagents, delegate-task, orchestration, review]
+    related_skills: [planner, worker]
 ---
 
 # Manager Skill
 
 ## Overview
 
-The manager skill coordinates the full assignment workflow. It keeps the backlog, implementation, verification, documentation, and handoff aligned. It is responsible for deciding which skill should be used next and for checking that the final deliverable is complete.
+The manager skill is the orchestration role. It takes the planner backlog and manages worker subagents. The manager does not do all implementation itself. It gives individual user stories to worker subagents, collects results, checks evidence, asks for fixes when needed, and performs the final integration review.
 
-Use this skill as the control layer after planner creates stories and before final submission. Manager does not replace builder or worker; it routes work to them and verifies their outputs.
+This skill is intentionally built around subagents. In Hermes, the manager uses `delegate_task` to run focused worker agents with isolated context.
 
 ## When to Use
 
-- Several user stories or tasks must be coordinated.
-- The repository needs a deliverables check before submission.
-- Skill outputs must be reviewed for consistency.
-- The final ZIP or documentation must include the required artifacts.
-- A task touches multiple areas such as apps, packages, Supabase, docs, and skills.
+- Planner has produced user stories and they need execution.
+- Multiple stories should be given to separate workers.
+- Work can be parallelized safely.
+- Results from workers must be reviewed and integrated.
+- A final check, commit, ZIP, or push is needed.
 
-Do not use this skill for isolated implementation. Use builder for code creation and worker for narrow execution tasks.
+Do not use manager to invent the backlog from scratch. Use planner first.
+Do not create a separate builder role. Implementation is done by worker subagents.
 
-## Responsibilities
+## Manager Responsibilities
 
-Manager owns these activities:
+1. Read the planner output.
+2. Decide which stories can run in parallel and which must be sequential.
+3. Dispatch each story to one worker subagent using `delegate_task`.
+4. Give every worker the exact story text, affected paths, constraints, and verification command.
+5. Require workers to return changed files, verification output, and blockers.
+6. Run or request review checks after worker results.
+7. Ask a worker subagent for fixes if a story is incomplete.
+8. Perform final repository checks and prepare commit/push or submission.
 
-1. Read the assignment, README, and existing repository status.
-2. Confirm the active backlog from planner.
-3. Assign implementation stories to builder or worker.
-4. Check that each result has evidence: changed files, command output, tests, or manual verification notes.
-5. Keep documentation up to date, especially usage instructions for the skills.
-6. Prepare the final handoff or submission checklist.
+## Subagent Dispatch Pattern
 
-## Coordination Flow
+Use this pattern for one story:
 
-```text
-1. Planner creates user stories and acceptance criteria.
-2. Manager reviews scope and orders the work.
-3. Builder implements app, package, Storybook, or Supabase code.
-4. Worker performs focused support tasks such as parsing, file generation, checks, or packaging.
-5. Manager runs quality gates and documents the result.
+```python
+delegate_task(
+    goal="Execute US-01: <story title>",
+    context="""
+    You are a worker subagent for the workout platform repository.
+
+    STORY:
+    <paste the full planner story here>
+
+    RULES:
+    - Stay inside the affected paths unless the story requires more.
+    - Do not invent extra scope.
+    - If reusable UI is touched, add or update Storybook stories.
+    - If Supabase is touched, keep Edge Functions as orchestration and SQL Functions as domain logic.
+    - Run the verification listed in the story when possible.
+
+    RETURN FORMAT:
+    - Summary
+    - Changed files
+    - Verification command and exact result
+    - Blockers or follow-up needed
+    """,
+    toolsets=["terminal", "file"]
+)
 ```
 
-## Assignment Deliverable Checklist
+## Parallel Dispatch Pattern
 
-For this repository, check at minimum:
+When stories do not touch the same files, the manager may dispatch them in parallel:
 
-- `skills/software-development/planner/SKILL.md` exists.
-- `skills/software-development/manager/SKILL.md` exists.
-- `skills/software-development/builder/SKILL.md` exists.
-- `skills/software-development/worker/SKILL.md` exists.
-- Each skill has Hermes-style YAML frontmatter.
-- Each skill has Overview, When to Use, actionable workflow, Common Pitfalls, and Verification Checklist.
-- Usage instructions exist in project documentation.
-- `npm run check-types` still passes when code was changed.
-- Any generated ZIP contains the relevant skills and docs.
+```python
+delegate_task(tasks=[
+    {
+        "goal": "Execute US-01: shared button component",
+        "context": "<full story, paths, verification, return format>",
+        "toolsets": ["terminal", "file"]
+    },
+    {
+        "goal": "Execute US-02: README usage docs",
+        "context": "<full story, paths, verification, return format>",
+        "toolsets": ["terminal", "file"]
+    }
+])
+```
 
-## Review Questions
+Do not run stories in parallel when they edit the same files. Sequence them instead.
 
-Before marking work done, answer:
+## Review Loop
 
-- Did the implementation satisfy the exact requested scope?
-- Are there exactly four role skills for planner, manager, builder, and worker?
-- Is each skill understandable without the chat history?
-- Does the usage documentation explain the order and purpose of the skills?
-- Are there unverified claims in the final answer?
+After each worker result:
+
+1. Check changed files with `git status --short`.
+2. Read or inspect important changed files.
+3. Run the story verification if the worker did not prove it.
+4. If acceptance criteria are not met, dispatch a fix worker with the exact gaps.
+5. Continue only when the story is complete.
+
+## Final Execution Checklist
+
+Before finishing:
+
+```bash
+git status --short
+npm run check-types
+python3 <skill-validation-script-if-relevant>
+python3 <zip-content-check-if-relevant>
+git add <changed-files>
+git commit -m "<clear message>"
+git push <remote> main
+```
+
+For this assignment, the expected role skills are exactly:
+
+- `skills/software-development/planner/SKILL.md`
+- `skills/software-development/manager/SKILL.md`
+- `skills/software-development/worker/SKILL.md`
+
+There is no `builder` skill in this version. Worker subagents are responsible for implementation.
 
 ## Common Pitfalls
 
-1. Letting one skill do everything. Keep planning, coordination, building, and focused work separate.
-2. Skipping evidence. Manager should not accept "done" without command output or file checks.
-3. Forgetting documentation. A skill set is incomplete if users do not know how to use it.
-4. Overwriting assignment files unnecessarily. Make minimal, targeted changes.
-5. Packaging stale files. Rebuild the submission ZIP after changing skills.
+1. Doing worker tasks manually instead of delegating them.
+2. Sending a worker vague context instead of the full user story.
+3. Running conflicting workers in parallel on the same files.
+4. Accepting worker output without verification.
+5. Forgetting to document how the subagent workflow is executed.
+6. Keeping a builder role even though implementation belongs to workers.
 
 ## Verification Checklist
 
-- [ ] Four role skills exist and are named planner, manager, builder, and worker.
-- [ ] Skill frontmatter validates and descriptions are under 1024 characters.
-- [ ] Usage documentation explains the workflow.
-- [ ] Git status and changed files were reviewed.
-- [ ] Required checks or packaging commands were run.
-- [ ] Final response lists real verification results.
+- [ ] Planner backlog exists before manager dispatches workers.
+- [ ] Each worker subagent receives one clear story or bounded task.
+- [ ] Parallel workers do not edit the same files.
+- [ ] Worker outputs include changed files and verification evidence.
+- [ ] Incomplete stories go through a fix-worker loop.
+- [ ] Final checks, commit, and push are completed when requested.

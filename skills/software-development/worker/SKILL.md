@@ -1,101 +1,145 @@
 ---
 name: worker
-description: "Use when a focused, bounded repository task must be executed for the workout platform, such as parsing prototypes, generating artifacts, checking files, or packaging output."
-version: 1.0.0
+description: "Use inside manager-dispatched subagents to execute one planned user story or one bounded support task with clear files, verification, and evidence."
+version: 1.1.0
 author: Lukas
 license: MIT
 platforms: [linux, macos, windows]
 metadata:
   hermes:
-    tags: [execution, automation, packaging, verification, support-task]
-    related_skills: [planner, manager, builder]
+    tags: [worker, subagent, execution, implementation, verification]
+    related_skills: [planner, manager]
 ---
 
 # Worker Skill
 
 ## Overview
 
-The worker skill handles narrow execution tasks that support planner, manager, and builder. It is for concrete, bounded work such as scanning files, generating JSON, indexing prototypes, running checks, updating a ZIP, or collecting evidence.
+The worker skill describes how a manager-dispatched subagent works. A worker receives one user story or one bounded support task from the manager, implements or checks it, verifies the result, and reports evidence back.
 
-Worker should be fast, careful, and verifiable. It should not redesign the app or make broad architectural decisions.
+There is no separate builder role. Worker subagents do the implementation work. The manager coordinates them; the planner creates the stories.
 
 ## When to Use
 
-- A manager asks for a focused repository check.
-- A builder needs generated support artifacts before coding.
-- Prototype files need to be indexed, parsed, zipped, or summarized.
-- The final submission ZIP must be rebuilt.
-- A command output or file existence check is needed as evidence.
+- Manager gives a worker subagent one planner story.
+- A small implementation task must be executed.
+- A focused validation, documentation, packaging, or file-generation task is needed.
+- A previous worker result needs a targeted fix.
 
-Do not use this skill to define requirements or own broad implementation. Use planner and builder for those tasks.
+Do not use worker for broad planning or orchestration. Use planner and manager for those roles.
 
-## Typical Tasks
+## Worker Contract
 
-Examples of suitable worker tasks:
+Every worker receives:
 
-- Count and list skill files under `skills/software-development`.
-- Validate SKILL.md frontmatter and required sections.
-- Run a prototype parsing script and save JSON output.
-- Rebuild a submission ZIP after files change.
-- Run `npm run check-types` and collect the exact result.
-- Compare expected deliverables with existing files.
+- story id and title,
+- full user story,
+- acceptance criteria,
+- affected paths,
+- constraints,
+- required verification,
+- return format.
 
-## Execution Workflow
+The worker must stay inside that contract. If the task is impossible or unclear, report a blocker instead of guessing.
 
-1. Restate the exact bounded task in one sentence.
-2. Identify the minimum files or commands needed.
-3. Run the command or perform the file operation.
-4. Capture the exact output, count, path, or checksum when useful.
-5. Report only facts and blockers to manager.
+## Worker Types
 
-## File Safety Rules
+### ui-worker
 
-- Do not edit broad app files unless explicitly assigned.
-- Prefer creating generated artifacts in documented output paths.
-- Do not delete source files unless manager explicitly requires cleanup.
-- Avoid stale ZIPs: rebuild after relevant source files change.
-- Keep command output concise but include enough evidence to verify the task.
+Handles React Native UI, shared components, design system, and Storybook.
 
-## Skill Validation Task
+Rules:
 
-For this assignment, worker can validate the four role skills with:
+- Use React Native primitives.
+- Export reusable components from package indexes.
+- Add or update Storybook stories when reusable UI changes.
+- Keep styles consistent with shared theme.
 
-```bash
-python3 - <<'PY'
-from pathlib import Path
-import re, yaml
-root = Path('skills/software-development')
-expected = ['planner', 'manager', 'builder', 'worker']
-for name in expected:
-    path = root / name / 'SKILL.md'
-    assert path.exists(), path
-    text = path.read_text(encoding='utf-8')
-    assert text.startswith('---')
-    end = text.find('
----
-', 3)
-    assert end != -1, path
-    fm = yaml.safe_load(text[3:end])
-    assert fm['name'] == name
-    assert 'description' in fm and len(fm['description']) <= 1024
-    for section in ['## Overview', '## When to Use', '## Common Pitfalls', '## Verification Checklist']:
-        assert section in text, f'{path}: missing {section}'
-print('OK: four role skills validated')
-PY
+### backend-worker
+
+Handles Supabase-related stories.
+
+Rules:
+
+- Edge Functions validate and orchestrate requests.
+- SQL Functions hold domain logic and transactional rules.
+- RLS policies protect data access.
+- Do not hardcode real credentials.
+
+### docs-worker
+
+Handles README, usage documentation, assignment notes, and workflow descriptions.
+
+Rules:
+
+- Make docs executable and concrete.
+- Include paths and commands.
+- Avoid vague process text.
+
+### validation-worker
+
+Handles checks and review tasks.
+
+Rules:
+
+- Run the exact command requested by manager.
+- Report exact output, counts, and failures.
+- Do not change source unless asked for a fix.
+
+### packaging-worker
+
+Handles submission ZIPs or generated artifacts.
+
+Rules:
+
+- Rebuild artifacts after source changes.
+- List ZIP contents.
+- Verify required files are included.
+
+## Execution Steps
+
+1. Read the assigned story or bounded task.
+2. Confirm affected paths.
+3. Make the smallest required change.
+4. Run the requested verification.
+5. If verification fails and the fix is within scope, fix and rerun.
+6. Report the result to manager.
+
+## Required Return Format
+
+```text
+Summary:
+- <what was done>
+
+Changed files:
+- <path>
+
+Verification:
+- Command: <command>
+- Result: <exact result or blocker>
+
+Acceptance criteria status:
+- [x] <criterion>
+- [ ] <criterion if not done, with reason>
+
+Blockers/follow-up:
+- <none or concrete issue>
 ```
 
 ## Common Pitfalls
 
-1. Doing more than the assigned task. Worker should stay bounded.
-2. Reporting assumptions as facts. Only report what was checked.
-3. Forgetting to rebuild generated artifacts after source changes.
-4. Hiding command failures. Report blockers immediately.
-5. Using stale paths. Always run from the repository root unless told otherwise.
+1. Expanding scope beyond the assigned story.
+2. Forgetting Storybook for reusable UI work.
+3. Reporting success without running verification.
+4. Editing files outside affected paths without manager approval.
+5. Hiding blockers or failed commands.
+6. Acting like a manager instead of a focused worker.
 
 ## Verification Checklist
 
-- [ ] Task scope is small and explicit.
-- [ ] Commands ran from the correct working directory.
-- [ ] Output paths, counts, or command results were captured.
-- [ ] No unrelated files were changed.
-- [ ] Manager can use the result as evidence.
+- [ ] One story or bounded task was executed.
+- [ ] Affected paths were respected.
+- [ ] Verification command was run or blocker was reported.
+- [ ] Changed files are listed.
+- [ ] Acceptance criteria status is explicit.
+- [ ] Result is ready for manager review.

@@ -1,0 +1,592 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kinetic Coach Storyboard</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #000000;
+      --surface: #05080d;
+      --surface-high: #0b111a;
+      --surface-bright: #101923;
+      --line: #1f2a37;
+      --text: #ffffff;
+      --muted: #94a3b8;
+      --primary: #7dd3fc;
+      --primary-strong: #38bdf8;
+      --on-primary: #00111c;
+      --success: #86efac;
+      --warning: #fde68a;
+      --danger: #fda4af;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 16px/1.5 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    .shell {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 24px 0 64px;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding: 12px 0 18px;
+      background: linear-gradient(180deg, #000 76%, rgba(0, 0, 0, 0));
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-mark {
+      width: 34px;
+      height: 34px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      color: var(--on-primary);
+      background: var(--primary);
+      box-shadow: 0 0 36px rgba(125, 211, 252, 0.28);
+    }
+
+    .nav {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .pill,
+    .button {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--surface);
+      color: var(--text);
+      font-weight: 850;
+      padding: 10px 14px;
+      transition: 160ms ease;
+    }
+
+    .pill:hover,
+    .button:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+      transform: translateY(-1px);
+    }
+
+    .button.primary {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: var(--on-primary);
+    }
+
+    .hero {
+      margin-top: 18px;
+      border: 1px solid var(--line);
+      border-radius: 34px;
+      background:
+        radial-gradient(circle at 84% 12%, rgba(125, 211, 252, 0.12), transparent 34%),
+        var(--surface);
+      padding: clamp(28px, 6vw, 58px);
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+    }
+
+    .eyebrow {
+      color: var(--primary);
+      font-size: 12px;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      font-weight: 900;
+      margin: 0 0 12px;
+    }
+
+    h1,
+    h2,
+    h3,
+    p { margin-top: 0; }
+
+    h1 {
+      max-width: 900px;
+      margin-bottom: 18px;
+      font-size: clamp(46px, 9vw, 92px);
+      line-height: 0.94;
+      letter-spacing: -0.07em;
+    }
+
+    .lead {
+      max-width: 760px;
+      color: var(--muted);
+      font-size: clamp(17px, 2vw, 20px);
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 28px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(140px, 1fr));
+      gap: 12px;
+      margin-top: 26px;
+    }
+
+    .stat,
+    .card,
+    .story-card,
+    .flow-step,
+    .screen-shot {
+      border: 1px solid var(--line);
+      background: var(--surface-high);
+      border-radius: 24px;
+    }
+
+    .stat { padding: 18px; }
+    .stat strong { display: block; color: var(--primary); font-size: 30px; line-height: 1; }
+    .stat span { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 900; }
+
+    section { margin-top: 48px; }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: end;
+      margin-bottom: 18px;
+    }
+
+    .section-head h2 {
+      margin-bottom: 0;
+      font-size: clamp(28px, 4vw, 44px);
+      letter-spacing: -0.04em;
+    }
+
+    .section-copy {
+      max-width: 620px;
+      color: var(--muted);
+      margin-bottom: 0;
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(150px, 1fr));
+      gap: 12px;
+    }
+
+    .flow-step {
+      position: relative;
+      min-height: 190px;
+      padding: 18px;
+      overflow: hidden;
+    }
+
+    .flow-step::after {
+      content: attr(data-step);
+      position: absolute;
+      right: -8px;
+      bottom: -28px;
+      color: rgba(125, 211, 252, 0.09);
+      font-size: 96px;
+      font-weight: 950;
+      line-height: 1;
+    }
+
+    .flow-step h3 { margin-bottom: 8px; }
+    .flow-step p { color: var(--muted); margin-bottom: 16px; }
+
+    .tag-row { display: flex; flex-wrap: wrap; gap: 8px; }
+
+    .tag {
+      display: inline-flex;
+      border: 1px solid rgba(125, 211, 252, 0.32);
+      border-radius: 999px;
+      color: var(--primary);
+      background: rgba(125, 211, 252, 0.08);
+      padding: 5px 9px;
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .screen-grid,
+    .story-grid,
+    .component-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .screen-shot { padding: 16px; }
+
+    .mock-window {
+      min-height: 250px;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: #000;
+      padding: 16px;
+      display: grid;
+      align-content: start;
+      gap: 14px;
+    }
+
+    .mock-nav { display: flex; flex-wrap: wrap; gap: 8px; }
+    .mock-nav span { border: 1px solid var(--line); border-radius: 999px; padding: 7px 10px; font-size: 12px; font-weight: 850; }
+    .mock-nav .active { background: var(--primary); color: var(--on-primary); border-color: var(--primary); }
+
+    .mock-title { font-size: clamp(30px, 5vw, 54px); line-height: 0.98; letter-spacing: -0.06em; font-weight: 950; }
+    .mock-copy { color: var(--muted); max-width: 520px; }
+    .mock-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .mock-button { border-radius: 14px; padding: 10px 12px; background: var(--primary); color: var(--on-primary); font-weight: 900; }
+    .mock-button.secondary { background: var(--surface-bright); color: var(--text); border: 1px solid var(--line); }
+
+    .mini-metrics,
+    .mini-list { display: grid; gap: 8px; }
+    .mini-metrics { grid-template-columns: repeat(3, 1fr); }
+    .mini-card { border: 1px solid var(--line); border-radius: 16px; padding: 12px; background: var(--surface); }
+    .mini-card strong { display: block; color: var(--primary); font-size: 22px; }
+    .mini-card span { color: var(--muted); font-size: 11px; text-transform: uppercase; font-weight: 850; }
+
+    .input-line { border: 1px solid var(--line); border-radius: 14px; padding: 12px; color: var(--muted); background: #000; }
+
+    .story-card { padding: 18px; }
+    .story-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+    .story-card h3 { margin-bottom: 8px; }
+    .story-card p { color: var(--muted); }
+    .criteria { display: grid; gap: 8px; padding: 0; margin: 14px 0 0; list-style: none; }
+    .criteria li { color: var(--muted); border-left: 2px solid var(--primary); padding-left: 10px; }
+
+    .component-card {
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: var(--surface-high);
+      padding: 18px;
+    }
+
+    .variant-list { display: grid; gap: 10px; margin-top: 14px; }
+    .variant {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: #000;
+      padding: 12px;
+    }
+    .variant span { color: var(--muted); }
+
+    .command-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .command {
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: var(--surface-high);
+      padding: 16px;
+    }
+
+    code {
+      display: block;
+      margin-top: 10px;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      color: var(--primary);
+      border: 1px solid var(--line);
+      background: #000;
+      border-radius: 14px;
+      padding: 12px;
+      font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    footer {
+      margin-top: 54px;
+      color: var(--muted);
+      border-top: 1px solid var(--line);
+      padding-top: 24px;
+    }
+
+    @media (max-width: 940px) {
+      .stats,
+      .flow,
+      .screen-grid,
+      .story-grid,
+      .component-grid,
+      .command-grid { grid-template-columns: 1fr; }
+      .topbar { position: static; align-items: flex-start; flex-direction: column; }
+      .section-head { align-items: flex-start; flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <a class="brand" href="#top" aria-label="Kinetic Coach Storyboard Start">
+        <span class="brand-mark">KC</span>
+        <span>Kinetic Coach Storyboard</span>
+      </a>
+      <nav class="nav" aria-label="Storyboard Navigation">
+        <a class="pill" href="#flow">Flow</a>
+        <a class="pill" href="#screens">Screens</a>
+        <a class="pill" href="#user-stories">User Storys</a>
+        <a class="pill" href="#storybook">Storybook</a>
+        <a class="pill" href="#use">Verwendung</a>
+      </nav>
+    </header>
+
+    <section id="top" class="hero">
+      <p class="eyebrow">React Native · Supabase · CDD</p>
+      <h1>Alle generierten Storys als fertiges Storyboard.</h1>
+      <p class="lead">
+        Diese Website sammelt die Screens, User Storys und Storybook-Varianten der Workout-App in einem minimalistischen Review-Storyboard: schwarzer Hintergrund, weiße Schrift und hellblaue Primary-Farbe.
+      </p>
+      <div class="hero-actions">
+        <a class="button primary" href="#screens">Screens ansehen</a>
+        <a class="button" href="#storybook">Komponenten prüfen</a>
+      </div>
+      <div class="stats" aria-label="Storyboard Kennzahlen">
+        <article class="stat"><strong>6</strong><span>Flow Steps</span></article>
+        <article class="stat"><strong>5</strong><span>App Screens</span></article>
+        <article class="stat"><strong>7</strong><span>Storybook Varianten</span></article>
+        <article class="stat"><strong>3</strong><span>Agent Skills</span></article>
+      </div>
+    </section>
+
+    <section id="flow">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Storyboard Flow</p>
+          <h2>Vom Einstieg bis zum Supabase Check</h2>
+        </div>
+        <p class="section-copy">Der Ablauf entspricht dem Prototyp aus der Aufgabe: Landing, Registration, Login und Overview wurden zur nutzbaren Workout-App erweitert.</p>
+      </div>
+      <div class="flow">
+        <article class="flow-step" data-step="01">
+          <h3>Start</h3>
+          <p>Der Nutzer sieht die App-Idee, CDD/Supabase Kontext und klare Call-to-Actions.</p>
+          <div class="tag-row"><span class="tag">Landing</span><span class="tag">Hero</span></div>
+        </article>
+        <article class="flow-step" data-step="02">
+          <h3>Register</h3>
+          <p>Neue Nutzer geben Name, E-Mail und Passwort ein und erhalten direktes lokales Feedback.</p>
+          <div class="tag-row"><span class="tag">Auth</span><span class="tag">Form</span></div>
+        </article>
+        <article class="flow-step" data-step="03">
+          <h3>Login</h3>
+          <p>Bestehende Nutzer melden sich an; die UI ist vorbereitet für Supabase Auth.</p>
+          <div class="tag-row"><span class="tag">Auth</span><span class="tag">Validation</span></div>
+        </article>
+        <article class="flow-step" data-step="04">
+          <h3>Dashboard</h3>
+          <p>Die Overview zeigt Tagesplan, Sets, Fortschritt, Volume und Sync-Quelle.</p>
+          <div class="tag-row"><span class="tag">Overview</span><span class="tag">Mock/Supabase</span></div>
+        </article>
+        <article class="flow-step" data-step="05">
+          <h3>Workout Actions</h3>
+          <p>Der Nutzer startet Workouts, markiert Sets, pausiert und setzt die Session zurück.</p>
+          <div class="tag-row"><span class="tag">Interactive</span><span class="tag">Local State</span></div>
+        </article>
+        <article class="flow-step" data-step="06">
+          <h3>Health</h3>
+          <p>Die App zeigt den Edge-Function Endpoint und testet die Supabase-Verbindung.</p>
+          <div class="tag-row"><span class="tag">Edge Function</span><span class="tag">Status</span></div>
+        </article>
+      </div>
+    </section>
+
+    <section id="screens">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Screen Storyboard</p>
+          <h2>Minimalistische Website-Skizzen</h2>
+        </div>
+        <p class="section-copy">Die Karten zeigen die generierten Screens als kompaktes Storyboard, damit man den Flow ohne App-Start schnell erklären kann.</p>
+      </div>
+      <div class="screen-grid">
+        <article class="screen-shot">
+          <div class="mock-window">
+            <div class="mock-nav"><span class="active">Start</span><span>Login</span><span>Register</span><span>Dashboard</span></div>
+            <p class="eyebrow">Minimal Supabase Workout App</p>
+            <div class="mock-title">Train smart. Track light.</div>
+            <p class="mock-copy">Fertiger Dark-Mode-Prototyp für Workout Tracking, Supabase Auth, Live-Daten-Fallback und CDD/Storybook.</p>
+            <div class="mock-actions"><span class="mock-button">Account erstellen</span><span class="mock-button secondary">Demo ansehen</span></div>
+          </div>
+        </article>
+        <article class="screen-shot">
+          <div class="mock-window">
+            <div class="mock-nav"><span>Start</span><span>Login</span><span class="active">Register</span><span>Dashboard</span></div>
+            <p class="eyebrow">Registrieren</p>
+            <div class="mock-title">Account erstellen</div>
+            <div class="input-line">Name · Max</div>
+            <div class="input-line">E-Mail · max@example.com</div>
+            <div class="input-line">Passwort · ••••••••</div>
+            <span class="mock-button">Registrieren</span>
+          </div>
+        </article>
+        <article class="screen-shot">
+          <div class="mock-window">
+            <div class="mock-nav"><span>Start</span><span class="active">Login</span><span>Register</span><span>Dashboard</span></div>
+            <p class="eyebrow">Login</p>
+            <div class="mock-title">Willkommen zurück</div>
+            <div class="input-line">E-Mail · max@example.com</div>
+            <div class="input-line">Passwort · ••••••••</div>
+            <span class="mock-button">Einloggen</span>
+          </div>
+        </article>
+        <article class="screen-shot">
+          <div class="mock-window">
+            <div class="mock-nav"><span>Start</span><span>Login</span><span>Register</span><span class="active">Dashboard</span></div>
+            <p class="eyebrow">Overview</p>
+            <div class="mock-title">Dein heutiger Plan</div>
+            <div class="mini-metrics">
+              <div class="mini-card"><strong>9/12</strong><span>Sets</span></div>
+              <div class="mini-card"><strong>6420</strong><span>kg Volume</span></div>
+              <div class="mini-card"><strong>MOCK</strong><span>Source</span></div>
+            </div>
+            <div class="mock-actions"><span class="mock-button">Start workout</span><span class="mock-button secondary">Mark set done</span></div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="user-stories">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Planner Output</p>
+          <h2>Generierte User Storys</h2>
+        </div>
+        <p class="section-copy">Diese Storys wurden aus Aufgabe, Prototyp und UI-Wunsch abgeleitet und vom Manager an Worker-Subagents bzw. fokussierte Umsetzungsschritte übergeben.</p>
+      </div>
+      <div class="story-grid">
+        <article class="story-card">
+          <div class="story-meta"><span class="tag">US-01</span><span class="tag">Must</span><span class="tag">ui-worker</span></div>
+          <h3>Finished dark user flow</h3>
+          <p>Als Visitor/Athlete möchte ich Landing, Login, Register, Dashboard und Health in einer fertigen App nutzen.</p>
+          <ul class="criteria">
+            <li>Reiner schwarzer Hintergrund, weiße Schrift, hellblaue Primary Buttons.</li>
+            <li>Nutzer kann zwischen allen Screens navigieren.</li>
+            <li>Login/Register zeigen lokale Validierung und Feedback.</li>
+          </ul>
+        </article>
+        <article class="story-card">
+          <div class="story-meta"><span class="tag">US-02</span><span class="tag">Must</span><span class="tag">ui-worker</span></div>
+          <h3>Shared dashboard theme alignment</h3>
+          <p>Als Athlete möchte ich ein einheitliches Dashboard ohne alten gelb/oliven Look.</p>
+          <ul class="criteria">
+            <li>Shared Theme nutzt Schwarz, Weiß, Grau und Hellblau.</li>
+            <li>WorkoutCard und Dashboard wirken zusammenhängend.</li>
+            <li>Storybook-Varianten bleiben lauffähig.</li>
+          </ul>
+        </article>
+        <article class="story-card">
+          <div class="story-meta"><span class="tag">US-03</span><span class="tag">Should</span><span class="tag">ui-worker</span></div>
+          <h3>Storybook remains reviewable</h3>
+          <p>Als Developer möchte ich die UI-Zustände weiterhin isoliert in Storybook prüfen.</p>
+          <ul class="criteria">
+            <li>WorkoutTrackingDashboard enthält Synced, Syncing, Offline, Error.</li>
+            <li>WorkoutCard enthält Default, Beginner, Advanced.</li>
+            <li>Der Storybook Build läuft erfolgreich.</li>
+          </ul>
+        </article>
+        <article class="story-card">
+          <div class="story-meta"><span class="tag">US-04</span><span class="tag">Must</span><span class="tag">backend-ready</span></div>
+          <h3>Supabase-safe demo setup</h3>
+          <p>Als Nutzer möchte ich eine App, die jetzt läuft und später echte Supabase-Daten lesen kann.</p>
+          <ul class="criteria">
+            <li>Public URL ist dokumentiert, Anon-Key bleibt Placeholder.</li>
+            <li>Mock-Fallback ist sichtbar und verhindert leere Screens.</li>
+            <li>Keine persönlichen Access Tokens werden im Repo gespeichert.</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section id="storybook">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Component Storyboard</p>
+          <h2>Alle Storybook-Varianten</h2>
+        </div>
+        <p class="section-copy">Die Storybook-Stories bleiben der CDD-Nachweis für wiederverwendbare React-Native Komponenten.</p>
+      </div>
+      <div class="component-grid">
+        <article class="component-card">
+          <h3>WorkoutCard</h3>
+          <p class="section-copy">Kompakte Workout-Karte für Listen, Empfehlungen und Upcoming Workouts.</p>
+          <div class="variant-list">
+            <div class="variant"><strong>Default</strong><span>Full Body Session · 40 min · Intermediate</span></div>
+            <div class="variant"><strong>Beginner</strong><span>Mobility Warmup · 15 min · Beginner</span></div>
+            <div class="variant"><strong>Advanced</strong><span>Athlete Conditioning · 60 min · Advanced</span></div>
+          </div>
+        </article>
+        <article class="component-card">
+          <h3>WorkoutTrackingDashboard</h3>
+          <p class="section-copy">Organismus für Tracking, Sets, Weekly Progress und Supabase Sync-State.</p>
+          <div class="variant-list">
+            <div class="variant"><strong>Synced</strong><span>Remote-Daten sind aktuell.</span></div>
+            <div class="variant"><strong>Syncing</strong><span>Lokale Änderungen werden übertragen.</span></div>
+            <div class="variant"><strong>Offline</strong><span>Mock Cache bleibt sichtbar.</span></div>
+            <div class="variant"><strong>Error</strong><span>Fehlerzustand ohne Datenverlust.</span></div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="use">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Verwendung</p>
+          <h2>So wird das Storyboard benutzt</h2>
+        </div>
+        <p class="section-copy">Die Website ist statisch und braucht keinen Build. App und Storybook bleiben separat ausführbar.</p>
+      </div>
+      <div class="command-grid">
+        <article class="command">
+          <h3>Storyboard öffnen</h3>
+          <p class="section-copy">Direkt im Browser öffnen.</p>
+          <code>xdg-open docs/storyboard/index.html</code>
+        </article>
+        <article class="command">
+          <h3>Workout-App starten</h3>
+          <p class="section-copy">Interaktive React-Native-Web App ausführen.</p>
+          <code>npm run dev --workspace @workout/workout-app -- --web --port 8081</code>
+        </article>
+        <article class="command">
+          <h3>Storybook starten</h3>
+          <p class="section-copy">Komponenten und Varianten isoliert prüfen.</p>
+          <code>npm run storybook</code>
+        </article>
+      </div>
+    </section>
+
+    <footer>
+      <p>Erstellt für die UWE-Aufgabe: Agent Skills, CDD, UI-Prototyp-Konvertierung und Supabase-ready Workout-App. Design: pure black, white text, light-blue primary.</p>
+    </footer>
+  </main>
+</body>
+</html>

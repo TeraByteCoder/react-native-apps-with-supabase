@@ -309,6 +309,17 @@ Fuer jeden dieser Bereiche sollten SQL Functions gezielt pro Use Case entworfen 
 - Saubere, testbare und datenbanknahe Fachlogik mit PostgreSQL SQL Functions
 - Gute Skalierbarkeit fuer weitere Apps, Features und Admin-Funktionen
 
+## Agent-Skills fuer die Umsetzung
+
+Die Projektarbeit ist in vier Hermes-aehnliche Skills aufgeteilt:
+
+- `planner`: erstellt User Stories mit Akzeptanzkriterien.
+- `manager`: koordiniert Aufgaben, Review und Abgabecheck.
+- `builder`: setzt geplante Stories in React Native, Storybook, Packages oder Supabase um.
+- `worker`: erledigt fokussierte Hilfsaufgaben wie Validierung, Parsing, Checks und ZIP-Erstellung.
+
+Die genaue Verwendung ist in `docs/skills-usage.md` beschrieben.
+
 ## Moegliche naechste Schritte
 
 1. Shared Components um weitere domain-nahe UI-Bausteine erweitern

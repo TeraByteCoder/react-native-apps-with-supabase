@@ -1,7 +1,7 @@
 ---
 name: manager
-description: "Use when planner-created user stories must be managed by dispatching worker subagents with delegate_task, collecting their results, reviewing them, and preparing the final handoff."
-version: 1.1.0
+description: "Use when planner-created worker plans must be orchestrated with delegate_task subagents, reviewed with evidence, integrated, verified, committed, and pushed."
+version: 1.2.0
 author: Lukas
 license: MIT
 platforms: [linux, macos, windows]
@@ -15,82 +15,63 @@ metadata:
 
 ## Overview
 
-The manager skill is the orchestration role. It takes the planner backlog and manages worker subagents. The manager does not do all implementation itself. It gives individual user stories to worker subagents, collects results, checks evidence, asks for fixes when needed, and performs the final integration review.
+The manager skill is the orchestration role. It takes the planner's worker plan and manages worker subagents. The manager does not invent the plan from scratch and does not do all implementation manually.
 
-This skill is intentionally built around subagents. In Hermes, the manager uses `delegate_task` to run focused worker agents with isolated context.
+The manager gives one bounded task to each worker subagent, includes the needed templates/resources, collects evidence, checks results, requests fixes, then performs the final integration review, commit, and push when requested.
+
+The skill follows the AgentSkills.io-style split: reusable prompt shapes live in `templates/`; worker definitions, best practices, CDD, tech stack, and verification rules live in planner `resources/`.
 
 ## When to Use
 
-- Planner has produced user stories and they need execution.
-- Multiple stories should be given to separate workers.
+- Planner has produced a worker plan from prototype/assignment input.
+- Multiple tasks should be given to separate workers.
 - Work can be parallelized safely.
 - Results from workers must be reviewed and integrated.
 - A final check, commit, ZIP, or push is needed.
 
-Do not use manager to invent the backlog from scratch. Use planner first.
+Do not use manager to directly create the prototype plan. Use planner first.
 Do not create a separate builder role. Implementation is done by worker subagents.
+
+## Required Inputs
+
+Manager needs:
+
+- planner worker plan,
+- `planner/resources/worker-types.md`,
+- `planner/resources/tech-stack.md`,
+- `planner/resources/cdd.md`,
+- `planner/resources/verification-checklist.md`,
+- `manager/templates/delegate-task-template.py`,
+- `worker/templates/worker-report-template.md`.
 
 ## Manager Responsibilities
 
-1. Read the planner output.
-2. Decide which stories can run in parallel and which must be sequential.
-3. Dispatch each story to one worker subagent using `delegate_task`.
-4. Give every worker the exact story text, affected paths, constraints, and verification command.
-5. Require workers to return changed files, verification output, and blockers.
+1. Read the planner output and referenced resources.
+2. Decide which tasks can run in parallel and which must be sequential.
+3. Dispatch each task to one worker subagent using `delegate_task`.
+4. Give every worker the exact task text, affected paths, constraints, resource excerpts, and verification command.
+5. Require workers to return changed files, verification output, acceptance status, and blockers.
 6. Run or request review checks after worker results.
-7. Ask a worker subagent for fixes if a story is incomplete.
-8. Perform final repository checks and prepare commit/push or submission.
+7. Ask a worker subagent for fixes if a task is incomplete.
+8. Perform final repository checks.
+9. Commit and push when requested by the user.
 
 ## Subagent Dispatch Pattern
 
-Use this pattern for one story:
+Use `templates/delegate-task-template.py` as the source template for worker dispatch.
 
-```python
-delegate_task(
-    goal="Execute US-01: <story title>",
-    context="""
-    You are a worker subagent for the workout platform repository.
+One worker gets one bounded task. Include only the resource sections that matter for that task plus the shared verification checklist.
 
-    STORY:
-    <paste the full planner story here>
+## Parallel Dispatch Rules
 
-    RULES:
-    - Stay inside the affected paths unless the story requires more.
-    - Do not invent extra scope.
-    - If reusable UI is touched, add or update Storybook stories.
-    - If Supabase is touched, keep Edge Functions as orchestration and SQL Functions as domain logic.
-    - Run the verification listed in the story when possible.
+Manager may dispatch tasks in parallel only when:
 
-    RETURN FORMAT:
-    - Summary
-    - Changed files
-    - Verification command and exact result
-    - Blockers or follow-up needed
-    """,
-    toolsets=["terminal", "file"]
-)
-```
+- affected files do not overlap,
+- there is no dependency between the tasks,
+- build or generated artifact outputs will not collide,
+- each worker has a clear return format.
 
-## Parallel Dispatch Pattern
-
-When stories do not touch the same files, the manager may dispatch them in parallel:
-
-```python
-delegate_task(tasks=[
-    {
-        "goal": "Execute US-01: shared button component",
-        "context": "<full story, paths, verification, return format>",
-        "toolsets": ["terminal", "file"]
-    },
-    {
-        "goal": "Execute US-02: README usage docs",
-        "context": "<full story, paths, verification, return format>",
-        "toolsets": ["terminal", "file"]
-    }
-])
-```
-
-Do not run stories in parallel when they edit the same files. Sequence them instead.
+Do not run tasks in parallel when they edit the same files. Sequence them instead.
 
 ## Review Loop
 
@@ -98,9 +79,10 @@ After each worker result:
 
 1. Check changed files with `git status --short`.
 2. Read or inspect important changed files.
-3. Run the story verification if the worker did not prove it.
-4. If acceptance criteria are not met, dispatch a fix worker with the exact gaps.
-5. Continue only when the story is complete.
+3. Run the task verification if the worker did not prove it.
+4. Compare output against `planner/resources/verification-checklist.md`.
+5. If acceptance checks are not met, dispatch a fix worker with the exact gaps.
+6. Continue only when the task is complete.
 
 ## Final Execution Checklist
 
@@ -116,28 +98,33 @@ git commit -m "<clear message>"
 git push <remote> main
 ```
 
-For this assignment, the expected role skills are exactly:
+For this assignment, the role skills are:
 
 - `skills/software-development/planner/SKILL.md`
 - `skills/software-development/manager/SKILL.md`
 - `skills/software-development/worker/SKILL.md`
 
-There is no `builder` skill in this version. Worker subagents are responsible for implementation.
+Additional reusable material belongs in `templates/` and `resources/` under those skill directories, not as extra narrow role skills.
 
 ## Common Pitfalls
 
 1. Doing worker tasks manually instead of delegating them.
-2. Sending a worker vague context instead of the full user story.
+2. Sending a worker vague context instead of the full planned task and relevant resources.
 3. Running conflicting workers in parallel on the same files.
 4. Accepting worker output without verification.
-5. Forgetting to document how the subagent workflow is executed.
-6. Keeping a builder role even though implementation belongs to workers.
+5. Mixing CDD and tech-stack rules into one context blob.
+6. Keeping worker-type details in the main skill instead of resources.
+7. Forgetting final commit and push when explicitly requested.
 
 ## Verification Checklist
 
-- [ ] Planner backlog exists before manager dispatches workers.
-- [ ] Each worker subagent receives one clear story or bounded task.
+Use the shared checklist in `planner/resources/verification-checklist.md` and confirm:
+
+- [ ] Planner worker plan exists before manager dispatches workers.
+- [ ] Each worker subagent receives one clear bounded task.
+- [ ] Templates are loaded from `templates/`, not copied ad hoc.
+- [ ] Worker type and best-practice rules are loaded from resources.
 - [ ] Parallel workers do not edit the same files.
 - [ ] Worker outputs include changed files and verification evidence.
-- [ ] Incomplete stories go through a fix-worker loop.
+- [ ] Incomplete tasks go through a fix-worker loop.
 - [ ] Final checks, commit, and push are completed when requested.

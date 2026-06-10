@@ -311,11 +311,13 @@ Fuer jeden dieser Bereiche sollten SQL Functions gezielt pro Use Case entworfen 
 
 ## Agent-Skills fuer die Umsetzung
 
-Die Projektarbeit ist in drei Hermes-aehnliche Skills aufgeteilt:
+Die Projektarbeit ist in drei Hermes-aehnliche Rollen-Skills aufgeteilt:
 
-- `planner`: plant die Arbeit und erstellt User Storys mit Akzeptanzkriterien.
-- `manager`: nimmt die Planner-Storys und managed Worker-Subagents ueber `delegate_task`.
-- `worker`: beschreibt die fokussierten Subagents, die einzelne Storys, Checks, Docs oder Packaging-Aufgaben ausfuehren.
+- `planner`: plant aus HTML/CSS-Prototypen, Screenshots oder UI-Ideen einen Worker-Plan. Er schreibt nicht direkt finale User Storys als Hauptoutput.
+- `manager`: nimmt den Planner-Worker-Plan und orchestriert Worker-Subagents ueber `delegate_task`.
+- `worker`: beschreibt die fokussierten Subagents, die einzelne Umsetzung-, Check-, Doku- oder Packaging-Aufgaben ausfuehren.
+
+Templates liegen extra in `templates/`; Worker-Typen, CDD, Tech Stack, Best Practices und die gemeinsame Verification Checklist liegen extra in `resources/`. CDD wird bewusst nicht mit dem Tech Stack vermischt.
 
 Es gibt keinen separaten `builder` Skill mehr. Umsetzung passiert durch Worker-Subagents, die vom Manager gestartet und geprueft werden.
 

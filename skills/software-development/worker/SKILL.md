@@ -1,7 +1,7 @@
 ---
 name: worker
-description: "Use inside manager-dispatched subagents to execute one planned user story or one bounded support task with clear files, verification, and evidence."
-version: 1.1.0
+description: "Use inside manager-dispatched subagents to execute one bounded worker task using the shared templates/resources and return concrete verification evidence."
+version: 1.2.0
 author: Lukas
 license: MIT
 platforms: [linux, macos, windows]
@@ -15,13 +15,23 @@ metadata:
 
 ## Overview
 
-The worker skill describes how a manager-dispatched subagent works. A worker receives one user story or one bounded support task from the manager, implements or checks it, verifies the result, and reports evidence back.
+The worker skill describes how a manager-dispatched subagent works. A worker receives one bounded task from the manager, implements or checks it, verifies the result, and reports evidence back.
 
-There is no separate builder role. Worker subagents do the implementation work. The manager coordinates them; the planner creates the stories.
+There is no separate builder role. Worker subagents do implementation, documentation, validation, or packaging work. The manager coordinates them; the planner creates the prototype-derived worker plan.
+
+Worker-specific categories and best practices are intentionally stored as resources, not duplicated in this `SKILL.md`:
+
+- `../planner/resources/worker-types.md`
+- `../planner/resources/best-practices.md`
+- `../planner/resources/tech-stack.md`
+- `../planner/resources/cdd.md`
+- `../planner/resources/verification-checklist.md`
+
+Use `templates/worker-report-template.md` for the result format.
 
 ## When to Use
 
-- Manager gives a worker subagent one planner story.
+- Manager gives a worker subagent one planner-created worker task.
 - A small implementation task must be executed.
 - A focused validation, documentation, packaging, or file-generation task is needed.
 - A previous worker result needs a targeted fix.
@@ -32,114 +42,57 @@ Do not use worker for broad planning or orchestration. Use planner and manager f
 
 Every worker receives:
 
-- story id and title,
-- full user story,
-- acceptance criteria,
+- task id and title,
+- prototype source or reason for the task,
+- worker type from `worker-types.md`,
+- acceptance checks,
 - affected paths,
-- constraints,
+- constraints and relevant resources,
 - required verification,
 - return format.
 
 The worker must stay inside that contract. If the task is impossible or unclear, report a blocker instead of guessing.
 
-## Worker Types
-
-### ui-worker
-
-Handles React Native UI, shared components, design system, and Storybook.
-
-Rules:
-
-- Use React Native primitives.
-- Export reusable components from package indexes.
-- Add or update Storybook stories when reusable UI changes.
-- Keep styles consistent with shared theme.
-
-### backend-worker
-
-Handles Supabase-related stories.
-
-Rules:
-
-- Edge Functions validate and orchestrate requests.
-- SQL Functions hold domain logic and transactional rules.
-- RLS policies protect data access.
-- Do not hardcode real credentials.
-
-### docs-worker
-
-Handles README, usage documentation, assignment notes, and workflow descriptions.
-
-Rules:
-
-- Make docs executable and concrete.
-- Include paths and commands.
-- Avoid vague process text.
-
-### validation-worker
-
-Handles checks and review tasks.
-
-Rules:
-
-- Run the exact command requested by manager.
-- Report exact output, counts, and failures.
-- Do not change source unless asked for a fix.
-
-### packaging-worker
-
-Handles submission ZIPs or generated artifacts.
-
-Rules:
-
-- Rebuild artifacts after source changes.
-- List ZIP contents.
-- Verify required files are included.
-
 ## Execution Steps
 
-1. Read the assigned story or bounded task.
-2. Confirm affected paths.
+1. Read the assigned task and relevant resource excerpts.
+2. Confirm affected paths and file boundaries.
 3. Make the smallest required change.
-4. Run the requested verification.
-5. If verification fails and the fix is within scope, fix and rerun.
-6. Report the result to manager.
+4. Follow worker-type best practices from resources.
+5. Run the requested verification.
+6. If verification fails and the fix is within scope, fix and rerun.
+7. Report the result using `templates/worker-report-template.md`.
+
+## Resource Rules
+
+- UI workers use both `cdd.md` and `tech-stack.md`.
+- Backend workers use `tech-stack.md` and backend entries from `best-practices.md`.
+- Docs, validation, and packaging workers use only the resource sections relevant to their task.
+- Do not merge CDD guidance into tech-stack notes.
+- Do not invent a new worker category if `worker-types.md` already covers it.
 
 ## Required Return Format
 
-```text
-Summary:
-- <what was done>
-
-Changed files:
-- <path>
-
-Verification:
-- Command: <command>
-- Result: <exact result or blocker>
-
-Acceptance criteria status:
-- [x] <criterion>
-- [ ] <criterion if not done, with reason>
-
-Blockers/follow-up:
-- <none or concrete issue>
-```
+Use `templates/worker-report-template.md` exactly. Include command output or a concrete blocker for every verification item.
 
 ## Common Pitfalls
 
-1. Expanding scope beyond the assigned story.
+1. Expanding scope beyond the assigned task.
 2. Forgetting Storybook for reusable UI work.
 3. Reporting success without running verification.
 4. Editing files outside affected paths without manager approval.
 5. Hiding blockers or failed commands.
 6. Acting like a manager instead of a focused worker.
+7. Ignoring the separated resources and mixing CDD, tech stack, and worker rules together.
 
 ## Verification Checklist
 
-- [ ] One story or bounded task was executed.
+Use the shared checklist in `../planner/resources/verification-checklist.md` and confirm:
+
+- [ ] One bounded task was executed.
 - [ ] Affected paths were respected.
+- [ ] Relevant templates/resources were used.
 - [ ] Verification command was run or blocker was reported.
 - [ ] Changed files are listed.
-- [ ] Acceptance criteria status is explicit.
+- [ ] Acceptance-check status is explicit.
 - [ ] Result is ready for manager review.

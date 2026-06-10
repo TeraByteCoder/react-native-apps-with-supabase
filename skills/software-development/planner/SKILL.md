@@ -1,13 +1,13 @@
 ---
 name: planner
-description: "Use when an assignment, prototype, or feature idea must be converted into clear user stories, acceptance criteria, and a task split for manager-managed worker subagents."
-version: 1.1.0
+description: "Use when HTML/CSS prototypes, screenshots, or rough UI ideas must be converted into a worker-ready implementation plan without directly writing final user stories or doing implementation."
+version: 1.2.0
 author: Lukas
 license: MIT
 platforms: [linux, macos, windows]
 metadata:
   hermes:
-    tags: [planning, user-stories, storybook, backlog, subagents]
+    tags: [planning, prototypes, html-css, worker-plan, subagents]
     related_skills: [manager, worker]
 ---
 
@@ -15,75 +15,63 @@ metadata:
 
 ## Overview
 
-The planner skill is the first role in the workflow. It reads the assignment, README, prototypes, and user request, then creates the user stories that will later be executed by worker subagents.
+The planner skill is the separate planning role before manager orchestration. It reads the assignment, README, and especially HTML/CSS prototypes or visual mockups, then produces a worker-ready plan for the manager.
 
-Planner does not manage subagents and does not implement code directly. Its job is to make the work small, clear, testable, and ready for the manager.
+Planner does **not** directly write final user stories as its main output, does **not** implement code, and does **not** manage subagents. It translates prototype intent into small worker tasks, dependencies, acceptance checks, and files to inspect.
 
-In this project, “Storys” means user stories, not Storybook stories. If the task is UI-related, planner can still require Storybook coverage in the acceptance criteria.
+The skill follows the AgentSkills.io-style split: keep the `SKILL.md` focused on behavior; keep reusable templates in `templates/`; keep best-practice details in `resources/`.
 
 ## When to Use
 
-- A new assignment or feature must be split into work packages.
-- User wishes are vague and need to become concrete user stories.
-- The manager needs a backlog it can hand to worker subagents.
-- A React Native, Supabase, or Storybook-related task needs acceptance criteria.
-- Before any implementation starts.
+- HTML/CSS prototypes, screenshots, Storybook mockups, or UI ideas must become an execution plan.
+- A manager needs small tasks that can be assigned to individual worker subagents.
+- UI work must be separated from backend, docs, validation, and packaging work.
+- CDD decisions must be documented without mixing them into the project tech stack.
+- Before manager starts any `delegate_task` worker orchestration.
 
-Do not use planner for subagent orchestration. Use manager for that.
-Do not use planner for implementation. Worker subagents do that after manager assigns stories.
+Do not use planner for implementation. Worker subagents do that after manager assigns tasks.
+Do not use planner for orchestration. Manager does that.
+Do not use planner to produce broad, final user-story documents unless the manager explicitly asks for that format.
 
 ## Inputs
 
 Planner should inspect or receive:
 
-- the assignment text or PDF summary,
+- assignment text or teacher requirements,
 - `README.md`,
-- prototypes under `docs/ui/prototypes/`,
-- existing project structure,
-- current constraints such as React Native, Expo, Storybook, Supabase Edge Functions, SQL Functions, and CDD.
+- HTML/CSS prototypes, screenshots, Storybook examples, or `docs/storyboard/`,
+- current app/package structure,
+- `resources/tech-stack.md` for technology boundaries,
+- `resources/cdd.md` for component-driven development rules,
+- `resources/worker-types.md` for dispatch targets,
+- `templates/worker-plan-template.md` for output shape.
 
-## Output: User Story Backlog
+## Output: Worker Plan, Not Direct User Stories
 
-Write each story in this exact shape:
+Use `templates/worker-plan-template.md` as the exact output structure.
 
-```text
-US-<number>: <short title>
-As a <role>,
-I want <capability>,
-so that <benefit>.
+Each planned item should describe:
 
-Priority: Must | Should | Could
-Worker type: ui-worker | backend-worker | docs-worker | validation-worker | packaging-worker
-Affected paths:
-- <path>
-Dependencies: <story ids or none>
-Acceptance criteria:
-- Given <context>, when <action>, then <result>.
-- Given <context>, when <action>, then <result>.
-Implementation notes:
-- <short technical hints, no full implementation>
-Verification:
-- <command or manual check>
-```
+- prototype source and observed UI/behavior intent,
+- target worker type,
+- affected paths,
+- dependencies and conflicts,
+- acceptance checks,
+- verification commands or manual checks,
+- manager dispatch notes.
 
-## Worker Types
-
-Use these worker types so the manager can dispatch the right subagent:
-
-- `ui-worker`: React Native screens, shared components, design system, Storybook stories.
-- `backend-worker`: Supabase Edge Functions, migrations, SQL Functions, RLS.
-- `docs-worker`: README, usage docs, assignment documentation.
-- `validation-worker`: type checks, skill validation, file checks, review checks.
-- `packaging-worker`: abgabe ZIP, generated artifacts, submission folders.
+If the assignment later requires classical user stories, add them only as a derived appendix. The primary deliverable remains the manager-ready worker plan.
 
 ## Planning Rules
 
-1. Every story must be small enough for one worker subagent.
-2. Every story must have testable acceptance criteria.
-3. UI stories must mention Storybook when reusable components are touched.
-4. Backend stories must state whether logic belongs in Edge Functions or SQL Functions.
-5. Documentation and packaging must be separate stories if they are required.
-6. Avoid vague tasks like “make app better”. Convert them into concrete user outcomes.
+1. Start from the prototype: identify screens, components, states, interactions, and missing assets.
+2. Split work by worker resource type from `resources/worker-types.md`.
+3. Keep CDD rules in `resources/cdd.md`; keep libraries, Supabase, Expo, Storybook, and tooling in `resources/tech-stack.md`.
+4. One planned task must be small enough for one worker subagent.
+5. UI tasks must mention reusable components and Storybook coverage when components are touched.
+6. Backend tasks must state whether work belongs in Edge Functions, SQL Functions, migrations, or RLS.
+7. Docs, validation, and packaging are separate tasks when required.
+8. Avoid vague tasks like “make prototype real”. Convert them into bounded worker tasks.
 
 ## Handoff to Manager
 
@@ -91,31 +79,39 @@ End every planner result with a manager handoff:
 
 ```text
 Manager handoff:
-- Total stories: <n>
+- Total worker tasks: <n>
 - Suggested parallel groups:
-  - Group A: US-01, US-02
-  - Group B: US-03
+  - Group A: WT-01, WT-02
+  - Group B: WT-03
 - Sequential blockers:
-  - US-04 waits for US-02
+  - WT-04 waits for WT-02
+- Shared resources to include in every worker context:
+  - skills/software-development/planner/resources/tech-stack.md
+  - skills/software-development/planner/resources/cdd.md
+  - skills/software-development/planner/resources/worker-types.md
+  - skills/software-development/planner/resources/verification-checklist.md
 - Required final checks:
   - npm run check-types
   - skill validation script
-  - ZIP content check
+  - ZIP/content check if packaging changed
 ```
 
 ## Common Pitfalls
 
-1. Writing implementation steps instead of user stories.
-2. Forgetting acceptance criteria, which makes worker verification weak.
-3. Making stories too big for one subagent.
-4. Mixing manager responsibilities into planner output.
-5. Forgetting Storybook requirements for reusable UI components.
-6. Ignoring dependencies between stories.
+1. Writing final user stories instead of a manager-ready worker plan.
+2. Mixing CDD principles into the tech-stack resource.
+3. Keeping worker-type rules inside `SKILL.md` instead of `resources/worker-types.md`.
+4. Forgetting to map prototype states to concrete worker tasks.
+5. Making tasks too large for one worker subagent.
+6. Forgetting Storybook requirements for reusable UI components.
+7. Ignoring dependencies between tasks that touch the same files.
 
 ## Verification Checklist
 
-- [ ] Every story has role, goal, benefit, priority, worker type, paths, and dependencies.
-- [ ] Acceptance criteria are testable.
-- [ ] Storybook is required where reusable UI is touched.
-- [ ] Backend boundary between Edge Functions and SQL Functions is clear when relevant.
-- [ ] Manager handoff includes story count, parallel groups, blockers, and final checks.
+Use the shared checklist in `resources/verification-checklist.md` and confirm:
+
+- [ ] Planner output uses the worker-plan template.
+- [ ] Every task has prototype source, worker type, paths, dependencies, acceptance checks, and verification.
+- [ ] CDD and tech-stack guidance are referenced as separate resources.
+- [ ] Worker-type rules are loaded from resources, not duplicated in the main skill.
+- [ ] Manager handoff includes task count, parallel groups, blockers, resources, and final checks.
